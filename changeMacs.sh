@@ -51,8 +51,9 @@ echo "Is This Correct? Your About To Edit The Running DHCP Server, PLEASE DOUBLE
 read -p "Y or N?" yn
 case $yn in
 	[Yy]* )
+	# remove old entry
+	removeOldIp $OLDIP
 	## generate dhcp list:
-	cp /etc/dhcp/dhcpdCOPY.conf /tmp/dhcpd.conf
 	hostEntry $NEWHOST $NEWMACLC $OLDIP >> /tmp/dhcpd.conf
 	if dhcpd -t -cf /tmp/dhcpd.conf ; then
 		cp /tmp/dhcpd.conf /etc/dhcp/dhcpd.conf
