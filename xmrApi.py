@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 import os
 import requests
 import json
@@ -7,11 +7,16 @@ from socket import error as socket_error
 import sys
 import configparser
 import paramiko
-#import MySQLdb
+import datetime
 from multiprocessing.dummy import Pool as ThreadPool 
 import time
 
-sys.stdout = open('loggyMcLoggerson.txt','wt')
+sys.stdout = open('loggyMcLoggerson.txt','at')
+tstamp = datetime.datetime.now()
+print("NEW LOG STARTED AT: " + str(tstamp))
+print("############################################################")
+print("")
+print()
 
 def remove_reboot(ip_address):
     ssh_client = paramiko.SSHClient()
@@ -32,13 +37,16 @@ def remove_reboot(ip_address):
         print("Conn error " + ip_address)
         return "Cannot connect"
 
-
-
-
 ip_add_file = open(r'./c2.txt','r')
 output = './output.txt'
+errors = './errors.txt'
 try:
     os.remove(output)
+except OSError:
+    pass
+
+try:
+    os.remove(errors)
 except OSError:
     pass
 
@@ -77,11 +85,24 @@ for host in ip_add_file:
 #    print("data = " + str(data))
 #    print("json_data = " + str(json_data))
     if my_dic["highest"] > 2000:
-        print(host + "   Highest Hashrate: " + str(my_dic["highest"]), file=open("output.txt", "a"))
+        with open("output.txt", "at") as out_file:
+            out_file.write(host + "   Highest Hashrate: " + str(my_dic["highest"]) + "\n")
     else:
-        remove_reboot(host)
-        print(host + " had low hashrate (" + str(my_dic["highest"]) + "), rebooted it.", file=open("output.txt", "a"))
+        #remove_reboot(host)
+        with open("errors.txt", "at") as err_file:
+            err_file.write(host + " had low hashrate (" + str(my_dic["highest"]) + "), NEEDS REBOOT" + "\n")
+        #print(host + " had low hashrate (" + str(my_dic["highest"]) + "), NEEDS REBOOT", file=open(errors, "a"))
+        #print(host + " had low hashrate (" + str(my_dic["highest"]) + "), NEEDS REBOOT", file=open(output, "a"))
+        #print(host + " had low hashrate (" + str(my_dic["highest"]) + "), rebooted it.", file=open("output.txt", "a"))
 
-with open(output, 'r') as fin:
-    print(fin.read(), end="")
+with open("output.txt", 'r') as outout:
+    print(outout.read(), end="")
+
+print("")
+print("Here are the rigs that had issues: \n ")
+
+with open("errors.txt", 'r') as errout:
+    print(errout.read(), end="")
+
 print("cat loggyMcLoggerson.txt for logs...")
+print("cat output.txt for results")
