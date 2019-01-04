@@ -4,8 +4,41 @@ import requests
 import json
 import errno
 from socket import error as socket_error
+import paramiko
+import configparser
+from multiprocessing.dummy import Pool as ThreadPool 
+import time
+from termcolor import colored
 
-ip_add_file = open(r'./c22.txt','r')
+
+def remove_reboot(ip_address):
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        ssh_client.connect(ip_address, username='rigx', password='rigx', timeout=10)
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh_client.exec_command("sudo -S rm -rf /home/rigx/elixir_xmr/amd.txt; reboot now")
+        ssh_stdin.write('rigx' + '\n')
+        ssh_stdin.flush()
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh_client.exec_command("sudo -S reboot now")
+        ssh_stdin.write('rigx' + '\n')
+        ssh_stdin.flush()
+        with open("error.txt", "at") as error_file:
+            error_file.write(host + " Has Low Hashrate( " + str(my_dic["highest"]) + ") ATTEMPTING REBOOT" + '\n')
+        print("Rebooting " + ip_address)
+        return "Successfully Rebooted!"
+    except paramiko.SSHException as sshException:
+        print("Unable to establish SSH connection: %s" % sshException)
+    #except Exception as except_a_rooni_and_cheese:
+    #    pass
+        # Return none if needs reboot, let the tech figure it out
+        # Log parse failed: Tech interaction needed (logs, or reboot) *** old response ***
+        #print("Conn error " + ip_address)
+        #with open("error.txt", "at") as error_file:
+        #    error_file.write(host + " Had Connection Error, Possibly Crashed" + '\n')
+        #return "Cannot connect"
+######################################################################
+######################################################################
+ip_add_file = open(r'./c2.txt','r')
 output = './output.txt'
 try:
     os.remove(output)
@@ -52,13 +85,14 @@ for host in ip_add_file:
         with open("output.txt", "at") as output_file:
             output_file.write(host + "   Highest Hashrate: " + str(my_dic["highest"]) + '\n')
     else:
+        #remove_reboot(host)
         with open("error.txt", "at") as error_file:
             error_file.write(host + " Has Low Hashrate( " + str(my_dic["highest"]) + ") POSSIBLY NEEDS A REBOOT!" + '\n')
 
 with open("output.txt", "r") as output_out:
     print(output_out.read(), end="")
-
-print("Here Are The Rigs That May Have Issues: ")
+print()
+print()
+print(colored("Here Are The Rigs That May Have Issues: ", "red"))
 with open("errors.txt", "r") as error_out:
     print(error_out.read(), end="")
-
