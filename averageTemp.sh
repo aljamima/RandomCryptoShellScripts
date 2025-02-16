@@ -14,6 +14,6 @@ fanSpeed=$gpuAverage
 
 if [ '$gpuAverage' > 75 ]; then fanSpeed=100; fi
 
-./fanController.sh -a all -s $fanSpeed
+./AMDFanController.sh -a all -s $fanSpeed
 
 
